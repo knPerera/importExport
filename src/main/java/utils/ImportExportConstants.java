@@ -69,6 +69,13 @@ public class ImportExportConstants {
     public static final String CLIENT_NAME_PROPERTY="client.name";
     public static final String SSL_VALIDATION="ssl.certificate.validation";
     public static final String IS_SAAS="is.saas.app";
+    public static final String LOG4J_FILE = "log4j.file";
+    public static final String CONFIG_API="api.name";
+    public static final String CONFIG_VERSION = "api.version";
+    public static final String CONFIG_PROVIDER="api.provider";
+    public static final String API_LIST_FILE="api.list";
+    public static final String DESTINATION_FOLDER ="destination.file.name";
+
 
     //REST API constants
     public static final String CREATED = "CREATED";
@@ -84,6 +91,7 @@ public class ImportExportConstants {
     public static final String API_PROVIDER = "provider";
     public static final String API_LIST = "list";
     public static final String CONFIG_FILE ="config";
+    public static final String ZIP_DESTINATION="destination.file.path";
 
     //directory constants
 
@@ -96,5 +104,8 @@ public class ImportExportConstants {
     public static final String SOURCE_TYPE = "sourceType";
     public static final String DOC_ID = "documentId";
     public static final String DOC_NAME = "name";
+
+    //util constants
+    public static final String DEFAULT_FOLDER_NAME = "ExportedAPIs";
 
 }

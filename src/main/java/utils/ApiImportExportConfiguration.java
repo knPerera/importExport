@@ -12,6 +12,7 @@ public class ApiImportExportConfiguration {
     private String apiProvider;
     private String apiFilePath ;
     private String destinationPath;
+    private String destinationFolderName;
     private String log4JFilePath;
     private boolean checkSSLCertificate;
     private String dcrUrl;
@@ -19,6 +20,8 @@ public class ApiImportExportConfiguration {
     private String publisherUrl;
     private String clientName;
     private boolean isSaasApp;
+    private String trustStoreUrl;
+
 
     private static ApiImportExportConfiguration instance;
 
@@ -62,6 +65,10 @@ public class ApiImportExportConfiguration {
         return destinationPath;
     }
 
+    public void setDestinationFolderName(String name){this.destinationFolderName=name;}
+
+    public String getDestinationFolderName(){return destinationFolderName;}
+
     public void setLog4JFilePath(String path){this.log4JFilePath=path;}
 
     public String getLog4JFilePath() {
@@ -101,6 +108,10 @@ public class ApiImportExportConfiguration {
     public boolean getIsSaasApp() {
         return isSaasApp;
     }
+
+    public void setTrustStoreUrl(String url){this.trustStoreUrl=url;}
+
+    public String getTrustStoreUrl(){return  trustStoreUrl;}
 
     public void importFromProperties(Properties properties) {
 

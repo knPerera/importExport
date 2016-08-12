@@ -19,6 +19,7 @@
 package utils;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
@@ -27,7 +28,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
@@ -45,7 +45,8 @@ class ExportAPI {
 
     private static final Log log = LogFactory.getLog(ExportAPI.class);
 
-    private static String zipFileLocation = System.getProperty(ImportExportConstants.USER_DIR);
+    private static String zipFileLocation = null;
+    //System.getProperty(ImportExportConstants.USER_DIR);
     private static JSONParser parser = new JSONParser();
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -59,6 +60,8 @@ class ExportAPI {
      */
     static void exportAPI(String APIName, String provider, String version, String accessToken)
             throws IOException {
+        ApiImportExportConfiguration config = ApiImportExportConfiguration.getInstance();
+
         //creating a directory to hold API details
         String APIFolderPath = zipFileLocation.concat(File.separator + APIName + "-" + version);
         createDirectory(APIFolderPath);
@@ -67,8 +70,9 @@ class ExportAPI {
         String APIId = provider + "-" + APIName + "-" + version;
 
         //getting API meta- information
-        CloseableHttpClient client = HttpClients.createDefault();
-        String metaInfoUrl = ImportExport.prop.getProperty(ImportExportConstants.PUBLISHER_URL) + "apis/" + APIId;
+        CloseableHttpClient client = SSL.getHttpClient(config.getCheckSSLCertificate());
+                //HttpClients.createDefault();
+        String metaInfoUrl = config.getPublisherUrl() + "apis/" + APIId;
         HttpGet request = new HttpGet(metaInfoUrl);
         request.setHeader(javax.ws.rs.core.HttpHeaders.AUTHORIZATION, ImportExportConstants.CONSUMER_KEY_SEGMENT + " " +
                 accessToken);
@@ -116,7 +120,7 @@ class ExportAPI {
         String documentationSummary = getAPIDocumentation(accessToken, uuid);
         exportAPIDocumentation(uuid,documentationSummary,accessToken,APIFolderPath);
 
-        ArchiveGeneratorUtil.archiveDirectory(APIFolderPath);
+        ArchiveGeneratorUtil.archiveDirectory(zipFileLocation);
 
     }
 
@@ -127,12 +131,13 @@ class ExportAPI {
      * @param APIFolderpath archive base path
      */
     private static void exportAPIThumbnail(String uuid, String accessToken,String APIFolderpath) {
-
+        ApiImportExportConfiguration config = ApiImportExportConfiguration.getInstance();
         try {
             //REST API call to get API thumbnail
-            String url= ImportExport.prop.getProperty(ImportExportConstants.PUBLISHER_URL)+"apis/"+uuid+
-                    "/thumbnail";
-            CloseableHttpClient client = HttpClients.createDefault();
+            String url= config.getPublisherUrl()+"apis/"+uuid+"/thumbnail";
+                    //ImportExport.prop.getProperty(ImportExportConstants.PUBLISHER_URL)+"apis/"+uuid+"/thumbnail";
+            CloseableHttpClient client = SSL.getHttpClient(config.getCheckSSLCertificate());
+                    //HttpClients.createDefault();
             HttpGet request = new HttpGet(url);
             request.setHeader(HttpHeaders.AUTHORIZATION, ImportExportConstants.CONSUMER_KEY_SEGMENT+" "+accessToken);
             CloseableHttpResponse response = client.execute(request);
@@ -200,11 +205,13 @@ class ExportAPI {
      * @return String output of documentation summary
      */
     public static String getAPIDocumentation(String accessToken,String uuid ){
-
+        ApiImportExportConfiguration config = ApiImportExportConfiguration.getInstance();
         try {
             //REST API call on Get API Documents
-            String url = ImportExport.prop.getProperty(ImportExportConstants.PUBLISHER_URL)+"apis/"+uuid+"/documents";
-            CloseableHttpClient client = HttpClients.createDefault();
+            String url = config.getPublisherUrl()+"apis/"+uuid+"/documents";
+                    //ImportExport.prop.getProperty(ImportExportConstants.PUBLISHER_URL)+"apis/"+uuid+"/documents";
+            CloseableHttpClient client = SSL.getHttpClient(config.getCheckSSLCertificate());
+                    //HttpClients.createDefault();
             HttpGet request = new HttpGet(url);
             request.setHeader(HttpHeaders.AUTHORIZATION, ImportExportConstants.CONSUMER_KEY_SEGMENT+" " + accessToken);
             CloseableHttpResponse response = client.execute(request);
@@ -225,7 +232,7 @@ class ExportAPI {
     public static void exportAPIDocumentation(String uuid,String documentaionSummary,String accessToken,
                                               String archivePath){
         OutputStream outputStream = null;
-
+        ApiImportExportConfiguration config = ApiImportExportConfiguration.getInstance();
         //create directory to hold API documents
         String documentFolderPath = archivePath.concat(File.separator+"docs");
         createDirectory(documentFolderPath);
@@ -250,9 +257,10 @@ class ExportAPI {
                         //getting documentId
                         String documentId = (String) document.get(ImportExportConstants.DOC_ID);
                         //REST API call to get document contents
-                        String url =ImportExport.prop.getProperty(ImportExportConstants.PUBLISHER_URL)+"apis/"+uuid
-                                +"/documents/"+ documentId+"/content";
-                        CloseableHttpClient client = HttpClients.createDefault();
+                        String url =config.getPublisherUrl()+"apis/"+uuid+"/documents/"+ documentId+"/content";
+                                //ImportExport.prop.getProperty(ImportExportConstants.PUBLISHER_URL)+"apis/"+uuid+"/documents/"+ documentId+"/content";
+                        CloseableHttpClient client = SSL.getHttpClient(config.getCheckSSLCertificate());
+                                //HttpClients.createDefault();
                         HttpGet request = new HttpGet(url);
                         request.setHeader(HttpHeaders.AUTHORIZATION, ImportExportConstants.CONSUMER_KEY_SEGMENT+" " +
                                 accessToken);
@@ -367,5 +375,41 @@ class ExportAPI {
             String errorMsg = "error occured while parsing the Json string to Json object when setting API status";
             log.error(errorMsg);
         }
+    }
+
+    public static void singleApiExport(String consumerCredentials) throws APIExportException {
+        ApiImportExportConfiguration config = ApiImportExportConfiguration.getInstance();
+        try {
+            //generating access token
+            String  token = ImportExportUtils.getAccessToken(ImportExportConstants.SCOPE_VIEW,consumerCredentials);
+
+            //creating folder to hold exporting APIs
+            String destinationFolderPath;
+            if(StringUtils.isNotBlank(config.getDestinationPath())){
+                destinationFolderPath = config.getDestinationPath();
+            }else {
+                log.warn("zip folder of expoting API will be created at user's current directory ");
+                destinationFolderPath=System.getProperty(ImportExportConstants.USER_DIR);
+            }
+            String folderName = null;
+            if(StringUtils.isBlank(config.getDestinationFolderName())){
+                folderName = ImportExportConstants.DEFAULT_FOLDER_NAME;
+                log.warn("zip folder will be created with default name ' "+ImportExportConstants.DEFAULT_FOLDER_NAME+" ' ");
+            }else folderName = config.getDestinationFolderName();
+
+            zipFileLocation = destinationFolderPath.concat(File.separator+folderName);
+
+            exportAPI(config.getApiName(), config.getApiProvider(),config.getApiVersion(),token);
+
+        } catch (APIExportException e) {
+            log.error("Error occurred during token generation, can't continue with valid token");
+            System.exit(1);
+        } catch (IOException e) {
+            String errormsg = "error occurred while exporting API "+config.getApiProvider()+"-"+
+                    config.getApiName() +"-"+config.getApiVersion();
+            log.error(errormsg,e);
+            throw new APIExportException(errormsg,e);
+        }
+
     }
 }

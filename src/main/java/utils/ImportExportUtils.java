@@ -20,31 +20,29 @@ package utils;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import javax.net.ssl.*;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
+import javax.net.ssl.HttpsURLConnection;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.*;
 
 class ImportExportUtils {
     private static final Log log = LogFactory.getLog(ImportExportUtils.class);
@@ -53,10 +51,12 @@ class ImportExportUtils {
      * Registering the clientApplication
      * @param username user name of the client
      * @param password password of the client
-     * @param userInfo UserInfo type object to hold consumer keys
      * @return UserInfo type object
      */
-    static UserInfo registerClient(String username, String password, UserInfo userInfo) throws APIExportException {
+    static String registerClient(String username, String password) throws APIExportException {
+
+        //disableCertificateValidation();
+        ApiImportExportConfiguration config = ApiImportExportConfiguration.getInstance();
 
         String concatUsernamePassword=username+":"+password;
         byte[] encodedBytes = Base64.encodeBase64(concatUsernamePassword.getBytes());
@@ -64,18 +64,21 @@ class ImportExportUtils {
 
         //payload for registering
         JSONObject jsonObject =  new JSONObject();
-        jsonObject.put("clientName", ImportExport.prop.getProperty(ImportExportConstants.CLIENT_NAME_PROPERTY));
+        jsonObject.put("clientName",config.getClientName() );
         jsonObject.put("owner",username);
         jsonObject.put("grantType", "password");
         jsonObject.put("saasApp", true);
 
         //REST API call for registering
-        CloseableHttpClient client = HttpClients.createDefault();
+       // CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response;
         String jsonString;
+        String encodedConsumerDetails;
+        CloseableHttpClient client = null;
         try {
-            String url=ImportExport.prop.getProperty(ImportExportConstants.REGISTRATION_URL);
-            client = HttpClients.createDefault();
+            String url=config.getDcrUrl();
+            client = SSL.getHttpClient(config.getCheckSSLCertificate());
+                    //HttpClients.createDefault();
             HttpPost request =  new HttpPost(url);
             request.setEntity(new StringEntity(jsonObject.toJSONString(), ImportExportConstants.CHARSET));
             request.setHeader(HttpHeaders.AUTHORIZATION,ImportExportConstants.AUTHORIZATION_KEY_SEGMENT+" "
@@ -83,6 +86,7 @@ class ImportExportUtils {
             request.setHeader(HttpHeaders.CONTENT_TYPE, ImportExportConstants.CONTENT_JSON);
 
             response = client.execute(request);
+            System.out.println(response.getStatusLine());
             jsonString = EntityUtils.toString(response.getEntity());
             JSONObject jsonObj = (JSONObject) new JSONParser().parse(jsonString);
 //            userInfo.setConsumerKey((String) jsonObj.get(ImportExportConstants.CLIENT_ID));
@@ -92,8 +96,7 @@ class ImportExportUtils {
             String consumerCredentials = jsonObj.get(ImportExportConstants.CLIENT_ID) + ":" +
                     jsonObj.get(ImportExportConstants.CLIENT_SECRET);
             byte[] bytes = Base64.encodeBase64(consumerCredentials.getBytes());
-            String encodedConsumerDetails = new String(bytes);
-            userInfo.setEncodedConsumerKeys(encodedConsumerDetails);
+            encodedConsumerDetails = new String(bytes);
         } catch (IOException e) {
             String msg = "Error occured while registering the client";
             log.error(msg,e);
@@ -105,19 +108,19 @@ class ImportExportUtils {
         } finally {
             IOUtils.closeQuietly(client);
         }
-        return userInfo;
+        return encodedConsumerDetails;
     }
 
     /**
      * retrieve a access token with requested scope
      *
      * @param scope required token scope
-     *@param info UserInfo type object
      */
 
-    static String getAccessToken(String scope, UserInfo info) throws UnsupportedEncodingException {
+    static String getAccessToken(String scope,String consumerCredentials)throws APIExportException{
 
-        String url = ImportExport.prop.getProperty(ImportExportConstants.GATEWAY_URL);
+        ApiImportExportConfiguration config = ApiImportExportConfiguration.getInstance();
+        String url = config.getGatewayUrl();
         String responseString;
 
         //mapping payload to a List
@@ -128,68 +131,271 @@ class ImportExportUtils {
         params.add(new BasicNameValuePair("scope", scope));
 
         //REST API call for get tokens
-        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpClient client = SSL.getHttpClient(config.getCheckSSLCertificate());
         try {
             HttpPost request = new HttpPost(url);
             request.setEntity(new UrlEncodedFormEntity(params, ImportExportConstants.CHARSET));
             request.setHeader(HttpHeaders.AUTHORIZATION,ImportExportConstants.AUTHORIZATION_KEY_SEGMENT+" "+
-                    info.getEncodedConsumerKeys());
+                    consumerCredentials);
             CloseableHttpResponse response;
             response = client.execute(request);
             responseString = EntityUtils.toString(response.getEntity());
             JSONObject jsonObj = (JSONObject) new JSONParser().parse(responseString);
             return ((String)jsonObj.get(ImportExportConstants.ACCESS_TOKEN));
-        } catch (IOException e) {
-            log.error("error occured while getting access token ");
         } catch (ParseException e) {
-           log.error("error occured while getting the raccess token");
-        }finally {
+           log.error("error occured while getting the access token");
+        } catch (UnsupportedEncodingException e) {
+            String errormsg = "error occurred while passing the payload for token generation";
+            log.error(errormsg,e);
+            throw new APIExportException(errormsg, e);
+        } catch (ClientProtocolException e) {
+            String errormsg = "error occurred while passing the payload for token generation";
+            log.error(errormsg,e);
+            throw new APIExportException(errormsg, e);
+        } catch (IOException e) {
+            String errormsg = "error occurred while generating tokens";
+            log.error(errormsg, e);
+            throw new APIExportException(errormsg,e);
+        } finally {
             IOUtils.closeQuietly(client);
         }
         return null;
     }
-
-    static void disableCertificateValidation() {
-
-        TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-            @Override
-            public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-
-            }
-
-            @Override
-            public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-
-            }
-
-            public X509Certificate[] getAcceptedIssuers() {
-                return null;
-            }
-        }};
+    /**
+     * reading the configuration file
+     */
+    private static Properties readProperties(String config) {
+        Properties prop;
+        prop= new Properties();
+        InputStream input = null;
+        File configurations = new File (config);
         try {
-            SSLContext sc = SSLContext.getInstance("TLS");
+            input = new FileInputStream(configurations);
 
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            // load a properties file
+            prop.load(input);
+        } catch (FileNotFoundException e) {
+            log.error("Unable to find the file, please give the full path");
+        } catch (IOException e) {
+            log.error("unable to load the properties file");
+        }finally {
+            try {
+                if(input != null){
+                    input.close();
+                }
+            } catch (IOException e) {
+                System.out.println(e);
+            }
+        }
+        return prop;
+    }
 
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+    public static void setDefaultConfigurations(ApiImportExportConfiguration config) {
+        Properties prop =readProperties("config.properties");
+        config.setDestinationPath(System.getProperty(ImportExportConstants.USER_DIR));
+        config.setDestinationFolderName(System.getProperty(ImportExportConstants.DESTINATION_FOLDER));
+        config.setCheckSSLCertificate(Boolean.parseBoolean(prop.getProperty(ImportExportConstants.SSL_VALIDATION)));
+        config.setDcrUrl(prop.getProperty(ImportExportConstants.REGISTRATION_URL));
+        config.setPublisherUrl(prop.getProperty(ImportExportConstants.PUBLISHER_URL));
+        config.setGatewayUrl(prop.getProperty(ImportExportConstants.GATEWAY_URL));
+        config.setClientName(prop.getProperty(ImportExportConstants.CLIENT_NAME_PROPERTY));
+        config.setSaasApp(Boolean.parseBoolean(prop.getProperty(ImportExportConstants.IS_SAAS)));
+        config.setLog4JFilePath(prop.getProperty(ImportExportConstants.LOG4J_FILE));
+        config.setApiFilePath(prop.getProperty(ImportExportConstants.API_LIST_FILE));
+        config.setTrustStoreUrl(prop.getProperty(ImportExportConstants.TRUST_STORE_URL_PROPERTY));
+    }
 
-        } catch (KeyManagementException e) {
-            log.info("eoorrrr occure while disabling ssl certificate validation");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            log.info("eoorrrr occure while disabling ssl certificate validation");
+    public static void setUserConfigurations(String configFile,ApiImportExportConfiguration config){
+        Properties prop = readProperties(configFile);
+        config.setApiName(prop.getProperty("api.name"));
+        config.setApiVersion(prop.getProperty("api.version"));
+        config.setApiProvider(prop.getProperty("api.provider"));
+        config.setDestinationPath(prop.getProperty(ImportExportConstants.ZIP_DESTINATION));
+        config.setDestinationFolderName(System.getProperty(ImportExportConstants.DESTINATION_FOLDER));
+        config.setCheckSSLCertificate(Boolean.parseBoolean(prop.getProperty(ImportExportConstants.SSL_VALIDATION)));
+        config.setDcrUrl(prop.getProperty(ImportExportConstants.REGISTRATION_URL));
+        config.setPublisherUrl(prop.getProperty(ImportExportConstants.PUBLISHER_URL));
+        config.setGatewayUrl(prop.getProperty(ImportExportConstants.GATEWAY_URL));
+        config.setClientName(prop.getProperty(ImportExportConstants.CLIENT_NAME_PROPERTY));
+        config.setSaasApp(Boolean.parseBoolean(prop.getProperty(ImportExportConstants.IS_SAAS)));
+        config.setLog4JFilePath(prop.getProperty(ImportExportConstants.LOG4J_FILE));
+        config.setApiFilePath(prop.getProperty(ImportExportConstants.API_LIST_FILE));
+        config.setTrustStoreUrl(prop.getProperty(ImportExportConstants.TRUST_STORE_URL_PROPERTY));
+
+    }
+
+    /**
+     * setting SSL Cert
+     */
+    public static void setSSlCert(){
+        System.out.println("indise setting SERT");
+        ApiImportExportConfiguration config = ApiImportExportConfiguration.getInstance();
+        String trustStore=null;
+        Scanner sc = new Scanner(System.in);
+        if(StringUtils.isBlank(config.getTrustStoreUrl())){
+            System.out.print("Enter the trust store url : ");
+            trustStore= sc.next();
+        }else {
+            trustStore=config.getTrustStoreUrl();
+        }
+        System.out.print("Enter trust store password : ");
+        char[] trustStorePassword = sc.next().toCharArray();
+
+        if (StringUtils.isNotBlank(trustStore) && StringUtils.isNotBlank(String.valueOf(trustStorePassword))) {
+            System.setProperty(ImportExportConstants.SSL_TRUSTSTORE, trustStore);
+            System.setProperty(ImportExportConstants.SSL_PASSWORD, String.valueOf(trustStorePassword));
+        }
+    }
+
+    public static void registerOAuthApplication(String username, String password) throws APIExportException {
+        String usernamePw = username + ":" + password;
+        String auth=null;
+        try {
+            byte[] encodedBytes = Base64.encodeBase64(usernamePw.getBytes("UTF-8"));
+            auth = new String(encodedBytes, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            String err ="Couldnt get the authorization headers";
+        }
+
+        String dcrEndpointURL = "https://localhost:9443/client-registration/v0.10/register";
+        try {
+            URL obj = new URL(dcrEndpointURL);
+            HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+
+            String applicationRequestBody = "{\n" +
+                    "\"clientName\": \"" + "rest_publisher" + "\",\n" +
+                    "\"tokenScope\": \"Production\",\n" +
+                    "\"owner\": \"" + username + "\",\n" +
+                    "\"grantType\": \"password refresh_token\",\n" +
+                    "\"saasApp\": true\n" +
+                    "}";
+
+            String basicAuth = "Basic "+auth;
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            con.setDoInput(true);
+            con.setDoOutput(true);
+            con.setRequestProperty("Authorization",basicAuth);
+            OutputStreamWriter writer = new OutputStreamWriter(con.getOutputStream(), "UTF-8");
+            writer.write(applicationRequestBody);
+            writer.close();
+
+            int responseCode = con.getResponseCode();
+            System.out.println("@@@@@@@@@@@@@@@@@@@@@  Response Code : " + responseCode);
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            StringBuffer jsonString = new StringBuffer();
+            String line;
+            while ((line = br.readLine()) != null) {
+                jsonString.append(line);
+            }
+            br.close();
+            con.disconnect();
+            System.out.println("Resiult of registration issssssssss   "+jsonString.toString());
+        } catch (Exception e) {
+            String err= "Error occured while registering the client ";
+            log.error(err,e);
+            throw new APIExportException(err,e);
         }
 
 
-        // Create all-trusting host name verifier
-        HostnameVerifier allHostsValid = new HostnameVerifier() {
-            public boolean verify(String hostname, SSLSession session) {
-                return true;
-            }
-        };
+//        Map<String, String> dcrRequestHeaders = new HashMap<String, String>();
+//        Map<String, String> dataMap = new HashMap<String, String>();
+//
+//
+//        try {
+//            String usernamePw = username + ":" + password;
+//            //Basic Auth header is used for only to get token
+//            byte[] encodedBytes = Base64.encodeBase64(usernamePw.getBytes("UTF-8"));
+//            dcrRequestHeaders.put("Authorization", "Basic " + new String(encodedBytes, "UTF-8"));
+//            //Set content type as its mandatory
+//            dcrRequestHeaders.put("Content-Type", "application/json");
+//            doPost(new URL(dcrEndpointURL), applicationRequestBody, dcrRequestHeaders);
+//
+//        } catch (MalformedURLException e) {
+//            String msg = "Error in register method";
+//            log.info(msg, e);
+//            throw new APIExportException(msg,e);
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//        }finally {
+//
+//        }
 
-        // Install the all-trusting host verifier
-        HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+    }
+
+    private static void doPost(URL endpoint, String postBody, Map<String, String> headers) throws APIExportException {
+
+        HttpURLConnection urlConnection = null;
+
+        try {
+            urlConnection = (HttpURLConnection)endpoint.openConnection();
+
+            urlConnection.setRequestMethod("POST");
+
+            urlConnection.setDoOutput(true);
+            urlConnection.setDoInput(true);
+            urlConnection.setUseCaches(false);
+            urlConnection.setAllowUserInteraction(false);
+            Iterator e = headers.entrySet().iterator();
+
+            while(e.hasNext()) {
+                Map.Entry sb = (Map.Entry)e.next();
+                urlConnection.setRequestProperty((String)sb.getKey(), (String)sb.getValue());
+            }
+
+            OutputStream e1 = urlConnection.getOutputStream();
+
+            try {
+                OutputStreamWriter sb1 = new OutputStreamWriter(e1, "UTF-8");
+                sb1.write(postBody);
+                sb1.close();
+            } catch (IOException var32) {
+                throw new Exception("IOException while posting data " , (Throwable) e);
+            } finally {
+                if(e1 != null) {
+                    e1.close();
+                }
+
+            }
+
+            StringBuilder sb2 = new StringBuilder();
+            BufferedReader rd = null;
+
+            try {
+                rd = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(), Charset.defaultCharset()));
+
+                String itr;
+                while((itr = rd.readLine()) != null) {
+                    sb2.append(itr);
+                }
+            } catch (FileNotFoundException var35) {
+                ;
+            } finally {
+                if(rd != null) {
+                    rd.close();
+                }
+
+            }
+
+            Iterator itr1 = urlConnection.getHeaderFields().keySet().iterator();
+            HashMap responseHeaders = new HashMap();
+
+            while(itr1.hasNext()) {
+                String key = (String)itr1.next();
+                if(key != null) {
+                    responseHeaders.put(key, urlConnection.getHeaderField(key));
+                }
+            }
+
+            //HTTPResponse res = new HTTPResponse(sb2.toString(), urlConnection.getResponseCode(), responseHeaders);
+
+        } catch (Exception e) {
+            String error = "error occur while calling dcr endpoint ";
+            log.error(error,e);
+            throw new APIExportException(error,e);
+        }
 
 
     }

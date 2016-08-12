@@ -50,9 +50,9 @@ public class ArchiveGeneratorUtil {
         File zipFile = new File(sourceDirectory.concat(".zip"));
 
         if (zipFile.exists()) {
-            log.info("API exported successfully");
+            System.out.println("API exported successfully");
         }else {
-            log.info("API exporting unsuccessful");
+            System.out.println("API exporting unsuccessful");
         }
     }
 
