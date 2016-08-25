@@ -1,15 +1,32 @@
+/*
+ *
+ *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ * /
+ */
 package utils;
 
+import java.util.Arrays;
 import java.util.Properties;
 
-/**
- * Created by kaveesha on 8/9/16.
- */
-public class ApiImportExportConfiguration {
+class ApiImportExportConfiguration {
 
     private String apiName;
     private String apiVersion;
     private String apiProvider;
+    private String username;
+    private char[] password;
     private String apiFilePath ;
     private String destinationPath;
     private String destinationFolderName;
@@ -21,11 +38,13 @@ public class ApiImportExportConfiguration {
     private String clientName;
     private boolean isSaasApp;
     private String trustStoreUrl;
+    private String zipFile;
+    private boolean updateApi;
 
 
     private static ApiImportExportConfiguration instance;
 
-    public static ApiImportExportConfiguration getInstance() {
+    static ApiImportExportConfiguration getInstance() {
         if (instance == null) {
             instance = new ApiImportExportConfiguration();
         }
@@ -33,87 +52,105 @@ public class ApiImportExportConfiguration {
     }
 
 
-    public void setApiName(String apiName) {
+    void setApiName(String apiName) {
         this.apiName = apiName;
     }
 
-    public String getApiName() {
+     String getApiName() {
         return apiName;
     }
 
-    public void setApiVersion(String version){this.apiVersion=version;}
+    void setApiVersion(String version){this.apiVersion=version;}
 
-    public String getApiVersion() {
+    String getApiVersion() {
         return apiVersion;
     }
 
-    public void setApiProvider(String provider){this.apiProvider=provider;}
+     void setApiProvider(String provider){this.apiProvider=provider;}
 
-    public String getApiProvider() {
+     String getApiProvider() {
         return apiProvider;
     }
 
-    public void setApiFilePath(String path){this.apiFilePath=path;}
+     void setApiFilePath(String path){this.apiFilePath=path;}
 
-    public String getApiFilePath() {
+     String getApiFilePath() {
         return apiFilePath;
     }
 
-    public void setDestinationPath(String path){this.destinationPath=path;}
+     void setDestinationPath(String path){this.destinationPath=path;}
 
-    public String getDestinationPath() {
+     String getDestinationPath() {
         return destinationPath;
     }
 
-    public void setDestinationFolderName(String name){this.destinationFolderName=name;}
+     void setDestinationFolderName(String name){this.destinationFolderName=name;}
 
-    public String getDestinationFolderName(){return destinationFolderName;}
+     String getDestinationFolderName(){return destinationFolderName;}
 
-    public void setLog4JFilePath(String path){this.log4JFilePath=path;}
+     void setLog4JFilePath(String path){this.log4JFilePath=path;}
 
-    public String getLog4JFilePath() {
+     String getLog4JFilePath() {
         return log4JFilePath;
     }
 
-    public void setCheckSSLCertificate(boolean value){this.checkSSLCertificate=value;}
+     void setCheckSSLCertificate(boolean value){this.checkSSLCertificate=value;}
 
-    public boolean getCheckSSLCertificate(){return this.checkSSLCertificate;}
+     boolean getCheckSSLCertificate(){return this.checkSSLCertificate;}
 
-    public void setDcrUrl(String url){this.dcrUrl=url;}
+     void setDcrUrl(String url){this.dcrUrl=url;}
 
-    public String getDcrUrl() {
+     String getDcrUrl() {
         return dcrUrl;
     }
 
-    public void setGatewayUrl(String url){this.gatewayUrl=url;}
+     void setGatewayUrl(String url){this.gatewayUrl=url;}
 
-    public String getGatewayUrl() {
+     String getGatewayUrl() {
         return gatewayUrl;
     }
 
-    public void setPublisherUrl(String url){this.publisherUrl=url;}
+     void setPublisherUrl(String url){this.publisherUrl=url;}
 
-    public String getPublisherUrl() {
+     String getPublisherUrl() {
         return publisherUrl;
     }
 
-    public void setClientName(String name){this.clientName=name;}
+     void setClientName(String name){this.clientName=name;}
 
-    public String getClientName() {
+     String getClientName() {
         return clientName;
     }
 
-    public void setSaasApp(boolean saasApp){this.isSaasApp=saasApp;}
+     void setSaasApp(boolean saasApp){this.isSaasApp=saasApp;}
 
-    public boolean getIsSaasApp() {
+     boolean getIsSaasApp() {
         return isSaasApp;
     }
 
-    public void setTrustStoreUrl(String url){this.trustStoreUrl=url;}
+     void setTrustStoreUrl(String url){this.trustStoreUrl=url;}
 
-    public String getTrustStoreUrl(){return  trustStoreUrl;}
+     String getTrustStoreUrl(){return  trustStoreUrl;}
 
-    public void importFromProperties(Properties properties) {
+    void setUsername(String username){this.username=username;}
+
+    String getUsername(){return username;}
+
+    void setPassword(char[] arr){
+        int size = arr.length;
+        this.password = Arrays.copyOf(arr, size);
+    }
+    char[] getPassword(){return password;}
+
+    void setZipFile(String path){this.zipFile=path;}
+
+    String getZipFile(){return zipFile;}
+
+    void setUpdateApi(boolean value){updateApi=value;}
+
+    Boolean getUpdateApi(){return updateApi;}
+
+     void importFromProperties(Properties properties) {
 
     }
 

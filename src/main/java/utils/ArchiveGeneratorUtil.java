@@ -32,18 +32,19 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public class ArchiveGeneratorUtil {
+class ArchiveGeneratorUtil {
     private static final Log log = LogFactory.getLog(ArchiveGeneratorUtil.class);
+
     /**
      * Archive a provided source directory to a zipped file
      *
      * @param sourceDirectory Source directory
      */
-    public static void archiveDirectory(String sourceDirectory){
+    static void archiveDirectory(String sourceDirectory){
 
         File directoryToZip = new File(sourceDirectory);
 
-        List<File> fileList = new ArrayList<File>();
+        List<File> fileList = new ArrayList<>();
         getAllFiles(directoryToZip, fileList);
         writeArchiveFile(directoryToZip, fileList);
 
@@ -118,9 +119,11 @@ public class ArchiveGeneratorUtil {
 
             // Get relative path from archive directory to the specific file
             String zipFilePath = file.getCanonicalPath()
-                    .substring(directoryToZip.getCanonicalPath().length() + 1, file.getCanonicalPath().length());
+                    .substring(directoryToZip.getCanonicalPath().length() + 1,
+                            file.getCanonicalPath().length());
             if (File.separatorChar != ImportExportConstants.ZIP_FILE_SEPARATOR)
-                zipFilePath = zipFilePath.replace(File.separatorChar, ImportExportConstants.ZIP_FILE_SEPARATOR);
+                zipFilePath = zipFilePath.replace(File.separatorChar,
+                        ImportExportConstants.ZIP_FILE_SEPARATOR);
             ZipEntry zipEntry = new ZipEntry(zipFilePath);
             zipOutputStream.putNextEntry(zipEntry);
 
