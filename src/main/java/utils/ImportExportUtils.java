@@ -441,7 +441,7 @@ class ImportExportUtils {
                 value = (String) json.get(key);
             }
         } catch (ParseException e) {
-            errorMsg = "Error occuered while parsing the json string to Json object";
+            errorMsg = "Error occurred while parsing the json string to Json object";
             log.error(errorMsg);
         }
         return value;

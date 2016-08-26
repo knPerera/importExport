@@ -24,14 +24,22 @@ public class ImportExportConstants {
 
     //system dependent default path separator character, represented as a string
     public static final String DIRECTORY_SEPARATOR = File.separator;
-    //System independent file separator for zip files
-    public static final char ZIP_FILE_SEPARATOR = '/';
     //character encoding type
     public static final String CHARSET= "UTF-8";
+
+    //archive constants
+    public static final String DOCUMENT_DIRECTORY = "docs";
+    public static final String INLINE_DOCUMENT_DIRECTORY = "InlineContents";
+    public static final String JSON_FILE_LOCATION = DIRECTORY_SEPARATOR + "meta-information" +
+            DIRECTORY_SEPARATOR + "api.json";
+    public static final String DOCUMENT_FILE_LOCATION = DIRECTORY_SEPARATOR + "docs" +
+            DIRECTORY_SEPARATOR +"docs.json";
+    public static final char ZIP_FILE_SEPARATOR = '/';
     //length of the name of the temporary directory
     public static final int TEMP_FILENAME_LENGTH = 5;
-    //name of the uploaded zip file
-    public static final String UPLOAD_FILE_NAME = "APIArchive.zip";
+    //image File name
+    public static final String IMG_NAME="icon";
+
 
     //OAuth constants
     public static final String EXPORT_SCOPE = "apim:api_view";
@@ -44,33 +52,10 @@ public class ImportExportConstants {
     public static final String ACCESS_TOKEN = "access_token";
     public static final String USERNAME="username";
 
-
-    //name of the inline file type
-    public static final String INLINE_DOC_TYPE = "INLINE";
-
-    //name of the physical file type
-    public static final String FILE_DOC_TYPE = "FILE";
-    //name of the url doc type
-    public static final String URL_DOC_TYPE = "URL";
-
-
-    //location of the fileType content
-    public static final String FILE_DOCUMENT_DIRECTORY = "FileContents";
-
-    //location of the documentation
-    public static final String DOCUMENT_DIRECTORY = "docs";
-
-    //location of the inline type content
-    public static final String INLINE_DOCUMENT_DIRECTORY = "InlineContents";
-
     //default configuration location
-    //public static final String DEFAULT_CONFIG_FILE = "src/main/resources/configs/config.properties";
     public static final String DEFAULT_CONFIG_FILE = "/configs/config.properties";
-
     public static final String LOG4J_LOCATION = "/configs/log4j.properties";
 
-    //image File name
-    public static final String IMG_NAME="icon";
 
     //configuration constants
     public static final String TRUST_STORE_URL_PROPERTY ="trust.store.url";
@@ -89,18 +74,6 @@ public class ImportExportConstants {
     public static final String DESTINATION_FOLDER ="destination.file.name";
     public static final String ZIP_FILE= "zip.file";
     public static final String UPDATE_API="update.existing.API";
-
-
-    //REST API constants
-    public static final String CREATED = "CREATED";
-    public static final String THUMBNAIL = "thumbnailUri";
-    public static final String CONTENT_JSON = "application/json";
-    //location of the api JSON file
-    public static final String JSON_FILE_LOCATION = DIRECTORY_SEPARATOR + "meta-information" + DIRECTORY_SEPARATOR +
-            "api.json";
-    //location of the documents JSON file
-    public static final String DOCUMENT_FILE_LOCATION = DIRECTORY_SEPARATOR + "docs" + DIRECTORY_SEPARATOR +
-            "docs.json";
 
     //system property constants
     public static final String USER_DIR = "user.dir";
@@ -123,9 +96,14 @@ public class ImportExportConstants {
     public static final String ZIP_FILE_PROP="zip";
     public static final String UPDATE_API_PROP="upadateIfexists";
 
-    //directory constants
 
-    //json constants
+    //REST API constants
+    public static final String CREATED = "CREATED";
+    public static final String CONTENT_JSON = "application/json";
+    public static final String MULTIPART_FILE="file";
+
+
+    //json string constants
     public static final String STATUS_CONSTANT = "status";
     public static final String SCOPE_CONSTANT = "scope";
     public static final String SWAGGER="apiDefinition";
@@ -134,6 +112,12 @@ public class ImportExportConstants {
     public static final String SOURCE_TYPE = "sourceType";
     public static final String DOC_ID = "documentId";
     public static final String DOC_NAME = "name";
+    public static final String THUMBNAIL = "thumbnailUri";
+    public static final String FILE_DOCUMENT_DIRECTORY = "FileContents";
+    public static final String INLINE_DOC_TYPE = "INLINE";
+    public static final String FILE_DOC_TYPE = "FILE";
+    public static final String URL_DOC_TYPE = "URL";
+    public static final String DOCUMENT_LIST = "list";
 
     //util constants
     public static final String DEFAULT_FOLDER_NAME = "ExportedAPIs";

@@ -82,15 +82,13 @@ class ImportExport{
             }
         //handling API import
         if(StringUtils.isNotBlank(config.getZipFile())){
-            int importResponse = 0;
             try {
-                importResponse = APIImporter.importAPIs(config.getZipFile(),consumerCredentials);
+                APIImporter.importAPIs(config.getZipFile(),consumerCredentials);
             } catch (APIImportException e) {
                 String errorMsg = "Unable to Import the APIs";
                 log.error(errorMsg, e);
                 System.exit(1);
             }
-            System.out.println("############33 response import "+importResponse);
         }
         }
 

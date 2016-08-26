@@ -287,10 +287,8 @@ class APIExporter {
                                 HttpClientGenerator.getHttpClient(config.getCheckSSLCertificate());
                         HttpGet request = new HttpGet(url);
                         request.setHeader(HttpHeaders.AUTHORIZATION,
-                        request.setHeader(HttpHeaders.AUTHORIZATION,
                                 ImportExportConstants.CONSUMER_KEY_SEGMENT + " " + accessToken);
                         HttpResponse response = client.execute(request);
-                        System.out.println("Document response isss   "+response.getStatusLine().getStatusCode());////// TODO: 8/25/16  remove
                         HttpEntity entity = response.getEntity();
 
                         if (ImportExportConstants.FILE_DOC_TYPE.equalsIgnoreCase(sourceType)) {
@@ -300,14 +298,11 @@ class APIExporter {
                             ImportExportUtils.createDirectory(filetypeFolderPath);
 
                             //writing file type content in to the zip folder
-                            String documentContent =
-                                    EntityUtils.toString(entity, ImportExportConstants.CHARSET);
                             String localFilePath = filetypeFolderPath + File.separator + document.get
                                     (ImportExportConstants.DOC_NAME);
                             try {
                                 outputStream = new FileOutputStream(localFilePath);
-                                outputStream.write(documentContent
-                                        .getBytes());
+                                entity.writeTo(outputStream);
                             } finally {
                                 try {
                                     assert outputStream != null;
@@ -325,11 +320,10 @@ class APIExporter {
                             //writing inline content in to the zip folder
                             InputStream inlineStream = null;
                             try {
-                                inlineStream = entity.getContent();
                                 String localFilePath = inlineFolderPath + File.separator +
                                         document.get (ImportExportConstants.DOC_NAME);
                                 outputStream = new FileOutputStream(localFilePath);
-                                IOUtils.copy(inlineStream, outputStream);
+                                entity.writeTo(outputStream);
                             } finally {
                                 try{
                                     if(inlineStream!=null){
