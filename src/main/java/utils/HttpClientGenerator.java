@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@
 
 package utils;
 
-import org.apache.http.HttpHost;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -44,9 +44,18 @@ import java.security.cert.X509Certificate;
 
 public class HttpClientGenerator {
 
-    public static CloseableHttpClient getHttpClient(boolean checkCert){
+    private static final Log log = LogFactory.getLog(HttpClientGenerator.class);
 
-        if(checkCert==false){
+    /**
+     * Returns a closableHttpClient from a connection manager pool
+     *
+     * @param validateServerCert validate SSL certificate or not
+     * @return a closable http client
+     */
+
+    public static CloseableHttpClient getHttpClient(boolean validateServerCert) throws UtilException {
+
+        if (!validateServerCert) {
             HttpClientBuilder b = HttpClientBuilder.create();
 
             // setup a Trust Strategy that allows all certificates.
@@ -58,47 +67,38 @@ public class HttpClientGenerator {
                         return true;
                     }
                 }).build();
-            } catch (NoSuchAlgorithmException e) {
-                String err = "error occurred while creating SSL disables hhtp client";
-            } catch (KeyManagementException e) {
-                e.printStackTrace();
-            } catch (KeyStoreException e) {
-                e.printStackTrace();
+            } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+                String errorMsg = "error occurred while disabling SSL certificate validation";
+                log.error(errorMsg, e);
+                throw new UtilException(errorMsg, e);
             }
-            b.setSslcontext( sslContext);
+            b.setSslcontext(sslContext);
 
             // not to check Hostnames
-            HostnameVerifier hostnameVerifier = SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
+            HostnameVerifier hostnameVerifier =
+                    SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
 
             //       create an SSL Socket Factory, to use weakened "trust strategy";
             //       and create a Registry, to register it.
             SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext,
                     (X509HostnameVerifier) hostnameVerifier);
-            Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
-                    .register("http", PlainConnectionSocketFactory.getSocketFactory())
-                    .register("https", sslSocketFactory)
-                    .build();
+            Registry<ConnectionSocketFactory> socketFactoryRegistry =
+                    RegistryBuilder.<ConnectionSocketFactory>create()
+                            .register("http", PlainConnectionSocketFactory.getSocketFactory())
+                            .register("https", sslSocketFactory)
+                            .build();
 
             // creating connection-manager using our Registry.
             //      -- allows multi-threaded use
             PoolingHttpClientConnectionManager connMgr =
-                    new PoolingHttpClientConnectionManager( socketFactoryRegistry);
-            connMgr.setDefaultMaxPerRoute(20);
-            // Increase max connections for localhost:80 to 50
-            HttpHost localhost = new HttpHost("localhost", 9443);
-            connMgr.setMaxPerRoute(new HttpRoute(localhost), 10);
-            b.setConnectionManager( connMgr);
+                    new PoolingHttpClientConnectionManager(socketFactoryRegistry);
+            b.setConnectionManager(connMgr);
 
             // finally, build the HttpClient;
             CloseableHttpClient client = b.build();
             return client;
-        }else {
+        } else {
             PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-            // Increase default max connection per route to 20
-            cm.setDefaultMaxPerRoute(20);
-            // Increase max connections for localhost:80 to 50
-            HttpHost localhost = new HttpHost("localhost", 9443);
-            cm.setMaxPerRoute(new HttpRoute(localhost), 10);
             CloseableHttpClient client = HttpClients.custom()
                     .setConnectionManager(cm)
                     .build();

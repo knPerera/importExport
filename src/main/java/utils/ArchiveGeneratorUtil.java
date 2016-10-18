@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -40,21 +40,12 @@ class ArchiveGeneratorUtil {
      *
      * @param sourceDirectory Source directory
      */
-    static void archiveDirectory(String sourceDirectory){
+    static void archiveDirectory(String sourceDirectory) {
 
         File directoryToZip = new File(sourceDirectory);
-
         List<File> fileList = new ArrayList<>();
         getAllFiles(directoryToZip, fileList);
         writeArchiveFile(directoryToZip, fileList);
-
-        File zipFile = new File(sourceDirectory.concat(".zip"));
-
-        if (zipFile.exists()) {
-            System.out.println("API exported successfully");
-        }else {
-            System.out.println("API exporting unsuccessful");
-        }
     }
 
     /**
@@ -81,13 +72,14 @@ class ArchiveGeneratorUtil {
      * @param directoryToZip Location of the archive
      * @param fileList       List of files to be included in the archive
      */
-    private static void writeArchiveFile(File directoryToZip, List<File> fileList){
+    private static void writeArchiveFile(File directoryToZip, List<File> fileList) {
 
         FileOutputStream fileOutputStream = null;
         ZipOutputStream zipOutputStream = null;
 
         try {
-            fileOutputStream = new FileOutputStream(directoryToZip.getPath() + ".zip");
+            fileOutputStream = new FileOutputStream(directoryToZip.getPath() +
+                    ImportExportConstants.ZIP_EXTENSION);
             zipOutputStream = new ZipOutputStream(fileOutputStream);
             for (File file : fileList) {
                 if (!file.isDirectory()) {
@@ -132,7 +124,7 @@ class ArchiveGeneratorUtil {
             zipOutputStream.closeEntry();
         } catch (IOException e) {
             String errorMessage = "I/O error while writing files to archive";
-           log.error(errorMessage);
+            log.error(errorMessage);
         } finally {
             IOUtils.closeQuietly(fileInputStream);
         }
