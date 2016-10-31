@@ -30,7 +30,6 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import javax.net.ssl.HostnameVerifier;
@@ -49,17 +48,16 @@ public class HttpClientGenerator {
     /**
      * Returns a closableHttpClient from a connection manager pool
      *
-     * @param validateServerCert validate SSL certificate or not
      * @return a closable http client
      */
 
-    public static CloseableHttpClient getHttpClient(boolean validateServerCert) throws UtilException {
+    public static CloseableHttpClient getHttpClient() throws UtilException {
 
-        if (!validateServerCert) {
+
             HttpClientBuilder b = HttpClientBuilder.create();
 
-            // setup a Trust Strategy that allows all certificates.
-            SSLContext sslContext = null;
+            // Setup a Trust Strategy that allows all certificates.
+            SSLContext sslContext;
             try {
                 sslContext = new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy() {
                     public boolean isTrusted(X509Certificate[] arg0, String arg1)
@@ -74,11 +72,11 @@ public class HttpClientGenerator {
             }
             b.setSslcontext(sslContext);
 
-            // not to check Hostnames
+            // Allow all Hostnames
             HostnameVerifier hostnameVerifier =
                     SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
 
-            //       create an SSL Socket Factory, to use weakened "trust strategy";
+            //       Create an SSL Socket Factory, to use weakened "trust strategy";
             //       and create a Registry, to register it.
             SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext,
                     (X509HostnameVerifier) hostnameVerifier);
@@ -88,21 +86,14 @@ public class HttpClientGenerator {
                             .register("https", sslSocketFactory)
                             .build();
 
-            // creating connection-manager using our Registry.
+            // Creating connection-manager using Registry.
             //      -- allows multi-threaded use
             PoolingHttpClientConnectionManager connMgr =
                     new PoolingHttpClientConnectionManager(socketFactoryRegistry);
             b.setConnectionManager(connMgr);
 
-            // finally, build the HttpClient;
+            // Finally, build the HttpClient;
             CloseableHttpClient client = b.build();
             return client;
-        } else {
-            PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-            CloseableHttpClient client = HttpClients.custom()
-                    .setConnectionManager(cm)
-                    .build();
-            return client;
-        }
     }
 }

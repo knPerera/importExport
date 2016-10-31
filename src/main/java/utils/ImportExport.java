@@ -25,18 +25,21 @@ import org.apache.log4j.PropertyConfigurator;
 import java.io.Console;
 import java.util.Scanner;
 
-//todo discuss: don't we need to get trustStore and password.
+import static utils.ImportExportUtils.checkPublisherUrl;
 
-
-class ImportExport{
+/*
+This class is the entry point to the client tool
+ */
+class ImportExport {
 
     private static final Log log = LogFactory.getLog(ImportExport.class);
-    static Scanner scanner = new Scanner(System.in, ImportExportConstants.CHARSET);
+    private static Scanner scanner = new Scanner(System.in, ImportExportConstants.CHARSET);
 
     public static void main(String[] args) {
 
         ApiImportExportConfiguration config = ApiImportExportConfiguration.getInstance();
-        //getting CLI inputs
+
+        //Getting CLI inputs
         System.out.print("Enter user name :");
         config.setUsername(scanner.next());
 
@@ -45,72 +48,67 @@ class ImportExport{
 
         System.out.println();
 
-        //setting up default configurations
+        //Setting up default configurations
         try {
             ImportExportUtils.setDefaultConfigurations(config);
         } catch (UtilException e) {
-            String error = "Error occurred while loading the default configurations";
-            log.warn(error,e);
+            log.warn("Error occurred while loading the default configurations", e);
         }
-        //setting user customized configurations
+        //Setting user customized configurations sent as cli parameters
         setUserInputs(config);
 
-        //enabling SSL certCheck,if certificate validation enabled
-        if (config.getCheckSSLCertificate()) {
-            ImportExportUtils.setSSlCert();
-        }
-
-        //configuring log4j properties
-        System.out.println("@@@@@@@@@@@@@@@@2 log4j file "+config.getLog4JFilePath());
+        //Configuring log4j properties
         PropertyConfigurator.configure(config.getLog4JFilePath());
 
-        //registering the client
+        //Registering the client
         String consumerCredentials = "";
         try {
             consumerCredentials = ImportExportUtils.registerClient(config.getUsername(),
                     String.valueOf(config.getPassword()));
         } catch (UtilException e) {
-            System.out.println("Error occurred while registering the client");
+            System.out.println("Error occurred while registering the client, cannot proceed");
             System.exit(1);
         }
-        //if the zip file path is not null continue API import
+        //If the zip file path is given continue API import
         if (StringUtils.isNotBlank(config.getZipFile())) {
             try {
-                //handling API import
+                ///TODO method seperation
+                //Handling API import
                 APIImporter.importAPIs(config.getZipFile(), consumerCredentials);
             } catch (APIImportException e) {
                 String errorMsg = "Unable to Import the APIs";
                 log.error(errorMsg, e);
                 System.exit(1);
             } catch (UtilException e) {
-                String errorMsg ="Error occurred while importing the API/APIs";
-                log.error(errorMsg,e);
+                String errorMsg = "Error occurred while importing the API/APIs";
+                log.error(errorMsg, e);
                 System.exit(1);
             }
         } else {
             if (StringUtils.isNotBlank(config.getApiFilePath()) &&
                     StringUtils.isBlank(config.getApiName())) {
-                //if a cvs file provided and details about a specific API not provided as cmd
+                //If a cvs file provided and details about a specific API not provided as cli
                 //arguments,bulkExport will be prioritize over single API export
                 try {
                     APIExporter.bulkApiExport(consumerCredentials);
                 } catch (APIExportException e) {
-                    String errorMsg = "Error occurred while attempting to bulk export ";
-                    log.error(errorMsg,e);
+                    String errorMsg = "Error occurred while attempting to bulk export APIs";
+                    log.error(errorMsg, e);
                     System.exit(1);
                 }
             } else {
                 try {
-                    //handling single API export
+                    //Handling single API export if any of above conditions not satisfied, or both
+                    // a api list and details about a single API is provided
                     if (StringUtils.isNotBlank(config.getApiName()) &&
                             StringUtils.isNotBlank(config.getApiFilePath())) {
-                        String message = "Only API " + config.getApiName() +
-                                " will be exported and api list ignored";
-                        log.warn(message);
+                        log.warn("Only API " + config.getApiName() +
+                                " will be exported and api list will be ignored");
                     }
                     APIExporter.singleApiExport(consumerCredentials);
                 } catch (APIExportException e) {
-                    log.error("Error occurred while exporting the API "+config.getApiName());
+                    log.error("Error occurred while exporting the API " + config.getApiName() +
+                            "_" + config.getApiVersion(), e);
                     System.exit(1);
                 }
             }
@@ -120,34 +118,33 @@ class ImportExport{
 
     /**
      * This method will get all the CLI inputs and map the properties in to a
-     * ApiImportExportConfiguration ojject
+     * ApiImportExportConfiguration object
      *
      * @param config ApiImportExportConfiguration type object
      */
     private static void setUserInputs(ApiImportExportConfiguration config) {
-        //getting inputs from CLI
+        //Getting configurations sent as command line parameters
         String name = System.getProperty(ImportExportConstants.API_NAME);
         String provider = System.getProperty(ImportExportConstants.API_PROVIDER);
         String version = System.getProperty(ImportExportConstants.API_VERSION);
         String configFile = System.getProperty(ImportExportConstants.CONFIG_FILE);
-        String bulkFile = System.getProperty(ImportExportConstants.API_LIST);
-        String sslCheckString = System.getProperty(ImportExportConstants.SSL_CERT);
+        String apiList = System.getProperty(ImportExportConstants.API_LIST);
         String log4jFile = System.getProperty(ImportExportConstants.LOG4J_PROP);
         String destinationPath = System.getProperty(ImportExportConstants.DESTINATION);
         String destinationFolderName = System.getProperty(ImportExportConstants.ZIP_NAME);
-        String trustStoreUrl = System.getProperty(ImportExportConstants.TRUST_STORE_URL);
         String dcrUrlSegment = System.getProperty(ImportExportConstants.DCR_URL_SEG);
         String publisherUrlSegment = System.getProperty(ImportExportConstants.PUBLISHER_URL_SEG);
         String gatewayUrlSegment = System.getProperty(ImportExportConstants.GATEWAY_URL_SEG);
         String zipFile = System.getProperty(ImportExportConstants.ZIP_FILE_PROP);
-        String updateApi=System.getProperty(ImportExportConstants.UPDATE_API_PROP);
+        String updateApi = System.getProperty(ImportExportConstants.UPDATE_API_PROP);
+        String clientName = System.getProperty(ImportExportConstants.CLIENT_NAME_PROP);
 
-        //setting configurations on the user input config file
+        //If a user config file given,overriding default configurations with it.
         if (StringUtils.isNotBlank(configFile)) {
             ImportExportUtils.setUserConfigurations(configFile, config);
         }
 
-        //setting the configurations taken from CLI
+        //Setting the configurations taken from CLI
         if (StringUtils.isNotBlank(name)) {
             config.setApiName(name);
         }
@@ -157,11 +154,8 @@ class ImportExport{
         if (StringUtils.isNotBlank(version)) {
             config.setApiVersion(version);
         }
-        if (StringUtils.isNotBlank(bulkFile)) {
-            config.setApiFilePath(bulkFile);
-        }
-        if (StringUtils.isNotBlank(sslCheckString)) {
-            config.setCheckSSLCertificate(Boolean.parseBoolean(sslCheckString));
+        if (StringUtils.isNotBlank(apiList)) {
+            config.setApiFilePath(apiList);
         }
         if (StringUtils.isNotBlank(log4jFile)) {
             config.setLog4JFilePath(log4jFile);
@@ -171,9 +165,6 @@ class ImportExport{
         }
         if (StringUtils.isNotBlank(destinationFolderName)) {
             config.setDestinationFolderName(destinationFolderName);
-        }
-        if (StringUtils.isNotBlank(trustStoreUrl)) {
-            config.setTrustStoreUrl(trustStoreUrl);
         }
         if (StringUtils.isNotBlank(dcrUrlSegment)) {
             config.setDcrUrl(dcrUrlSegment);
@@ -190,19 +181,20 @@ class ImportExport{
         if (StringUtils.isNotBlank(updateApi)) {
             config.setUpdateApi(Boolean.parseBoolean(updateApi));
         }
-        if(!config.getCheckSSLCertificate()){
-            System.out.println("3333333333333333  sert state "+config.getCheckSSLCertificate());
-            log.info("SSL certificate validation disabled");
+        if (StringUtils.isNotBlank(clientName)) {
+            config.setClientName(clientName);
         }
-        //validating publisher url
-        boolean value = ImportExportUtils.checkPublisherUrl(config.getPublisherUrl());
 
-        while (!value){
-            //if incorrect prompting user to re- enter
+        //Validating publisher url
+        boolean value = checkPublisherUrl(config.getPublisherUrl());
+
+        while (!value) {
+            //If publisher url incorrect, prompting user to re-enter
             System.out.print("Entered publisher url incorrect, check and re-enter : ");
-            String url=scanner.next();
+            String url = scanner.next();
             config.setPublisherUrl(url);
-            value=ImportExportUtils.checkPublisherUrl(config.getPublisherUrl());
+            //Re-checking the publisher url
+            value = checkPublisherUrl(config.getPublisherUrl());
         }
 
     }

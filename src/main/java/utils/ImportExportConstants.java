@@ -40,13 +40,13 @@ public class ImportExportConstants {
     //image File name
     public static final String IMG_NAME = "icon";
     //default buffer size
-    public static final int defaultBufferSize=1024;
+    public static final int defaultBufferSize = 1024;
 
 
     //OAuth constants
-    public static final String EXPORT_SCOPE = "apim:api_view";
-    public static final String IMPORT_SCOPE = "apim:api_create apim:api_view";
-    public static final String AUTHORIZATION_KEY_SEGMENT = "Basic";
+    public static final String EXPORT_SCOPE = "apim:api_view apim:mediation_policy_view";
+    public static final String IMPORT_SCOPE = "apim:api_create apim:api_view apim:mediation_policy_view apim:mediation_policy_create";
+    public static final String AUTHORIZATION_KEY_SEGMENT = "Basic ";
     public static final String CONSUMER_KEY_SEGMENT = "Bearer ";
     public static final String DEFAULT_GRANT_TYPE = "password";
     public static final String CLIENT_ID = "clientId";
@@ -56,8 +56,6 @@ public class ImportExportConstants {
 
     //default configuration location
     public static final String DEFAULT_CONFIG_FILE = "/configs/config.properties";
-    public static final String LOG4J_LOCATION = "/configs/log4j.properties";
-
 
     //configuration constants
     public static final String TRUST_STORE_URL_PROPERTY = "trust.store.url";
@@ -79,8 +77,6 @@ public class ImportExportConstants {
 
     //system property constants
     public static final String USER_DIR = "user.dir";
-    public static final String SSL_TRUSTSTORE = "javax.net.ssl.trustStore";
-    public static final String SSL_PASSWORD = "javax.net.ssl.trustStorePassword";
     public static final String API_NAME = "name";
     public static final String API_VERSION = "version";
     public static final String API_PROVIDER = "provider";
@@ -97,21 +93,23 @@ public class ImportExportConstants {
     public static final String PUBLISHER_URL_SEG = "publisher";
     public static final String ZIP_FILE_PROP = "zip";
     public static final String UPDATE_API_PROP = "updateIfExists";
-
+    public static final String CLIENT_NAME_PROP = "clientName";
 
     //REST API constants
     public static final String CREATED = "CREATED";
     public static final String CONTENT_JSON = "application/json";
-    public static final String PROTOTYPED= "PROTOTYPED";
+    public static final String PROTOTYPED = "PROTOTYPED";
 
     //url constants
-    public static final String APIS="/apis/";
-    public static final String THUMBNAIL_SEG="/thumbnail";
-    public static final String DOCUMENT_SEG="/documents";
-    public static final String URL_SEPARATOR ="/";
-    public static final String CONTENT_SEG="/content";
-    public static final String SWAGGER_SEG="/swagger";
-    public static final String APIS_URL="/apis";
+    public static final String APIS = "/apis/";
+    public static final String THUMBNAIL_SEG = "/thumbnail";
+    public static final String DOCUMENT_SEG = "/documents";
+    public static final String URL_SEPARATOR = "/";
+    public static final String CONTENT_SEG = "/content";
+    public static final String SWAGGER_SEG = "/swagger";
+    public static final String APIS_URL = "/apis";
+    public static final String MEDIATION_SEG = "/policies/mediation";
+    public static final String WSDL_SEG = "/wsdl";
 
     //json string constants
     public static final String STATUS_CONSTANT = "status";
@@ -123,21 +121,32 @@ public class ImportExportConstants {
     public static final String DOC_ID = "documentId";
     public static final String DOC_NAME = "name";
     public static final String THUMBNAIL = "thumbnailUri";
+    public static final String WSDL_URI = "wsdlUri";
     public static final String FILE_DOCUMENT_DIRECTORY = "FileContents";
     public static final String INLINE_DOC_TYPE = "INLINE";
     public static final String FILE_DOC_TYPE = "FILE";
-    public static final String BASEPATH="basePath";
-    public static final String PUBLISHER="publisher";
+    public static final String BASEPATH = "basePath";
+    public static final String PUBLISHER = "publisher";
+    public static final String SEQUENCES_ELEM = "sequences";
+
+    //mediation policy constants
+    public static final String SHARED_STATUS = "shared";
+    public static final String CONFIG_ELEM = "config";
+    public static final String TYPE_ELEM = "type";
+    public static final String NAME_ELEM = "name";
+    public static final String MEDIATION_LIST = "list";
 
     //util constants
     public static final String DEFAULT_FOLDER_NAME = "ExportedAPIs";
 
     //foldername constants
-    public static final String META_INFO="meta-information";
-    public static final String API_JSON="api.json";
-    public static final String DOC_JSON="docs.json";
-    public static final String SWAGGER_JSON="swagger.json";
-    public static final String ZIP_EXTENSION=".zip";
+    public static final String META_INFO = "meta-information";
+    public static final String API_JSON = "api.json";
+    public static final String DOC_JSON = "docs.json";
+    public static final String SWAGGER_JSON = "swagger.json";
+    public static final String ZIP_EXTENSION = ".zip";
+    public static final String MEDIATION_FOLDER = "mediation_policies";
+    public static final String WSDL_FILE_NAME = "wsdl";
 
     //payload constants
     public static final String CLIENT_NAME = "clientName";
@@ -146,18 +155,19 @@ public class ImportExportConstants {
     public static final String SAAS_APP = "saasApp";
     public static final String TOKEN_GRANT_TYPE = "grant_type";
     public static final String MULTIPART_Inline = "inlineContent";
+    public static final String MULTIPART_WSDL_CONTENT = "wsdlDefinision";
     public static final String MULTIPART_FILE = "file";
-    public static final String PNG_TYPE="png";
-    public static final String PNG_IMG="image/png";
-    public static final String JPG_TYPE="jpg";
-    public static final String JPG_IMG="image/jpg";
-    public static final String JPEG_TYPE="jpeg";
-    public static final String JPEG_IMG="image/jpeg";
-    public static final String BMP_TYPE="bmp";
-    public static final String BMP_IMG="image/bmp";
-    public static final String GIF_TYPE="gif";
-    public static final String GIF_IMG="image/gif";
-
+    public static final String PNG_TYPE = "png";
+    public static final String PNG_IMG = "image/png";
+    public static final String JPG_TYPE = "jpg";
+    public static final String JPG_IMG = "image/jpg";
+    public static final String JPEG_TYPE = "jpeg";
+    public static final String JPEG_IMG = "image/jpeg";
+    public static final String BMP_TYPE = "bmp";
+    public static final String BMP_IMG = "image/bmp";
+    public static final String GIF_TYPE = "gif";
+    public static final String GIF_IMG = "image/gif";
+    public static final boolean DEFAULT_SAAS_APP = true;
 
 
 }

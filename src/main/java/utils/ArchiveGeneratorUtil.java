@@ -32,13 +32,16 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+/**
+ * This class responsible for creating a archive of the created exporting directory
+ */
 class ArchiveGeneratorUtil {
     private static final Log log = LogFactory.getLog(ArchiveGeneratorUtil.class);
 
     /**
-     * Archive a provided source directory to a zipped file
+     * Archive the directory specified by source directory
      *
-     * @param sourceDirectory Source directory
+     * @param sourceDirectory Source directory path
      */
     static void archiveDirectory(String sourceDirectory) {
 
@@ -69,7 +72,7 @@ class ArchiveGeneratorUtil {
     /**
      * Generate archive file
      *
-     * @param directoryToZip Location of the archive
+     * @param directoryToZip Location of the directory to archive
      * @param fileList       List of files to be included in the archive
      */
     private static void writeArchiveFile(File directoryToZip, List<File> fileList) {
@@ -97,9 +100,9 @@ class ArchiveGeneratorUtil {
     }
 
     /**
-     * Add files of the directory to the archive
+     * Add files of the directory to be archive
      *
-     * @param directoryToZip  Location of the archive
+     * @param directoryToZip  Location of the directory to be archive
      * @param file            File to be included in the archive
      * @param zipOutputStream Output stream
      */
@@ -118,9 +121,7 @@ class ArchiveGeneratorUtil {
                         ImportExportConstants.ZIP_FILE_SEPARATOR);
             ZipEntry zipEntry = new ZipEntry(zipFilePath);
             zipOutputStream.putNextEntry(zipEntry);
-
             IOUtils.copy(fileInputStream, zipOutputStream);
-
             zipOutputStream.closeEntry();
         } catch (IOException e) {
             String errorMessage = "I/O error while writing files to archive";

@@ -18,13 +18,13 @@
 
 package utils;
 
+class APIImportException extends Exception {
 
-public class APIImportException extends Exception {
-    public APIImportException(String msg) {
+    APIImportException(String msg) {
         super(msg);
     }
 
-    public APIImportException(String msg, Throwable e) {
+    APIImportException(String msg, Throwable e) {
         super(msg, e);
     }
 }

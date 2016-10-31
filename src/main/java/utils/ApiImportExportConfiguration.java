@@ -18,8 +18,11 @@
 package utils;
 
 import java.util.Arrays;
-import java.util.Properties;
 
+/**
+ * This class is hold all the configurations related to the tool and can access each through the
+ * instance of the class
+ */
 class ApiImportExportConfiguration {
 
     private String apiName;
@@ -27,17 +30,14 @@ class ApiImportExportConfiguration {
     private String apiProvider;
     private String username;
     private char[] password;
-    private String apiFilePath ;
+    private String apiFilePath;
     private String destinationPath;
     private String destinationFolderName;
     private String log4JFilePath;
-    private boolean checkSSLCertificate;
     private String dcrUrl;
     private String gatewayUrl;
     private String publisherUrl;
     private String clientName;
-    private boolean isSaasApp;
-    private String trustStoreUrl;
     private String zipFile;
     private boolean updateApi;
 
@@ -51,108 +51,125 @@ class ApiImportExportConfiguration {
         return instance;
     }
 
-
     void setApiName(String apiName) {
         this.apiName = apiName;
     }
 
-     String getApiName() {
+    String getApiName() {
         return apiName;
     }
 
-    void setApiVersion(String version){this.apiVersion=version;}
+    void setApiVersion(String version) {
+        this.apiVersion = version;
+    }
 
     String getApiVersion() {
         return apiVersion;
     }
 
-     void setApiProvider(String provider){this.apiProvider=provider;}
+    void setApiProvider(String provider) {
+        this.apiProvider = provider;
+    }
 
-     String getApiProvider() {
+    String getApiProvider() {
         return apiProvider;
     }
 
-     void setApiFilePath(String path){this.apiFilePath=path;}
+    void setApiFilePath(String path) {
+        this.apiFilePath = path;
+    }
 
-     String getApiFilePath() {
+    String getApiFilePath() {
         return apiFilePath;
     }
 
-     void setDestinationPath(String path){this.destinationPath=path;}
+    void setDestinationPath(String path) {
+        this.destinationPath = path;
+    }
 
-     String getDestinationPath() {
+    String getDestinationPath() {
         return destinationPath;
     }
 
-     void setDestinationFolderName(String name){this.destinationFolderName=name;}
+    void setDestinationFolderName(String name) {
+        this.destinationFolderName = name;
+    }
 
-     String getDestinationFolderName(){return destinationFolderName;}
+    String getDestinationFolderName() {
+        return destinationFolderName;
+    }
 
-     void setLog4JFilePath(String path){this.log4JFilePath=path;}
+    void setLog4JFilePath(String path) {
+        this.log4JFilePath = path;
+    }
 
-     String getLog4JFilePath() {
+    String getLog4JFilePath() {
         return log4JFilePath;
     }
 
-     void setCheckSSLCertificate(boolean value){this.checkSSLCertificate=value;}
+    void setDcrUrl(String url) {
+        this.dcrUrl = url;
+    }
 
-     boolean getCheckSSLCertificate(){return this.checkSSLCertificate;}
-
-     void setDcrUrl(String url){this.dcrUrl=url;}
-
-     String getDcrUrl() {
+    String getDcrUrl() {
         return dcrUrl;
     }
 
-     void setGatewayUrl(String url){this.gatewayUrl=url;}
+    void setGatewayUrl(String url) {
+        this.gatewayUrl = url;
+    }
 
-     String getGatewayUrl() {
+    String getGatewayUrl() {
         return gatewayUrl;
     }
 
-     void setPublisherUrl(String url){this.publisherUrl=url;}
+    void setPublisherUrl(String url) {
+        this.publisherUrl = url;
+    }
 
-     String getPublisherUrl() {
+    String getPublisherUrl() {
         return publisherUrl;
     }
 
-     void setClientName(String name){this.clientName=name;}
+    void setClientName(String name) {
+        this.clientName = name;
+    }
 
-     String getClientName() {
+    String getClientName() {
         return clientName;
     }
 
-     void setSaasApp(boolean saasApp){this.isSaasApp=saasApp;}
-
-     boolean getIsSaasApp() {
-        return isSaasApp;
+    void setUsername(String username) {
+        this.username = username;
     }
 
-     void setTrustStoreUrl(String url){this.trustStoreUrl=url;}
+    String getUsername() {
+        return username;
+    }
 
-     String getTrustStoreUrl(){return  trustStoreUrl;}
-
-    void setUsername(String username){this.username=username;}
-
-    String getUsername(){return username;}
-
-    void setPassword(char[] arr){
+    void setPassword(char[] arr) {
         int size = arr.length;
         this.password = Arrays.copyOf(arr, size);
     }
-    char[] getPassword(){return password;}
 
-    void setZipFile(String path){this.zipFile=path;}
-
-    String getZipFile(){return zipFile;}
-
-    void setUpdateApi(boolean value){updateApi=value;}
-
-    Boolean getUpdateApi(){return updateApi;}
-
-     void importFromProperties(Properties properties) {
-
+    char[] getPassword() {
+        return password;
     }
 
+    void setZipFile(String path) {
+        this.zipFile = path;
+    }
+
+    String getZipFile() {
+        return zipFile;
+    }
+
+    void setUpdateApi(boolean value) {
+        updateApi = value;
+    }
+
+    Boolean getUpdateApi() {
+        return updateApi;
+    }
 
 }
